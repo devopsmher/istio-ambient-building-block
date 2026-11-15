@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "mesh-namespace values",
+  "type": "object",
+  "required": ["namespace", "allowFrom"],
+  "properties": {
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$",
+      "description": "DNS-1123 namespace name"
+    },
+    "enrolled": {
+      "type": "boolean"
+    },
+    "trustDomain": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allowFrom": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["namespace"],
+        "additionalProperties": false,
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
+          },
+          "serviceAccounts": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]([-a-z0-9.]{0,251}[a-z0-9])?$"
+            }
+          }
+        }
+      }
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "label": { "type": "string" }
+      }
+    },
+    "waypoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "serviceAccount": { "type": "string" }
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "extraIngress": { "type": "array" }
+      }
+    }
+  }
+}

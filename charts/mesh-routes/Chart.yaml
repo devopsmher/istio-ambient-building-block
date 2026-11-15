@@ -1,0 +1,5 @@
+apiVersion: v2
+name: mesh-routes
+description: Gateway API HTTPRoutes from a team namespace to the shared ingress Gateway.
+type: application
+version: 0.1.0

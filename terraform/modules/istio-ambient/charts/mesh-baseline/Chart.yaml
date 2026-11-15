@@ -1,0 +1,5 @@
+apiVersion: v2
+name: mesh-baseline
+description: Mesh-wide STRICT mTLS and the shared ingress Gateway for Istio ambient mode.
+type: application
+version: 0.1.0

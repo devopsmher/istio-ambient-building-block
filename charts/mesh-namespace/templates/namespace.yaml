@@ -1,0 +1,26 @@
+# Enrol the namespace in ambient mode: istio-cni redirects its pods' traffic to ztunnel.
+# No sidecars and no pod restarts in either direction: enrolled: false takes the namespace
+# out of the mesh again.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}
+  annotations:
+    # Never delete a team namespace together with this chart or its Argo CD Application.
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Delete=false
+  labels:
+    {{- if .Values.enrolled }}
+    istio.io/dataplane-mode: ambient
+    {{- end }}
+    {{- if .Values.ingress.allowed }}
+    {{ .Values.ingress.label }}: allowed
+    {{- end }}
+    {{- if and .Values.enrolled .Values.waypoint.enabled }}
+    istio.io/use-waypoint: waypoint
+    {{- if .Values.ingress.allowed }}
+    # By default ingress gateways bypass waypoints; send ingress through the waypoint too,
+    # so the same caller rules apply (ztunnel admits only the waypoint in this mode).
+    istio.io/ingress-use-waypoint: "true"
+    {{- end }}
+    {{- end }}

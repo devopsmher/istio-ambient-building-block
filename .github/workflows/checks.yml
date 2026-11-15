@@ -1,0 +1,47 @@
+name: checks
+
+# Static checks: no cluster and no cloud access needed.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  TERRAFORM_VERSION: 1.17.1
+  HELM_VERSION: v4.3.2
+  KUBECONFORM_VERSION: v0.8.0
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Install kubeconform
+        run: ./scripts/install-kubeconform.sh "$KUBECONFORM_VERSION"
+
+      - name: Terraform
+        run: |
+          terraform fmt -check -recursive terraform
+          for dir in terraform/modules/istio-ambient terraform/examples/eks; do
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate
+          done
+
+      - name: Charts
+        run: ./scripts/validate.sh
+
+      - name: Shell scripts
+        run: shellcheck scripts/*.sh

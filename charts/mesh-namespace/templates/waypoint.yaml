@@ -1,0 +1,17 @@
+{{- if .Values.waypoint.enabled }}
+# Waypoint proxy for L7 features. Istio deploys it from this Gateway; services of the
+# namespace use it because the namespace carries istio.io/use-waypoint.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: waypoint
+  namespace: {{ .Values.namespace }}
+  labels:
+    istio.io/waypoint-for: service
+spec:
+  gatewayClassName: istio-waypoint
+  listeners:
+    - name: mesh
+      port: 15008
+      protocol: HBONE
+{{- end }}

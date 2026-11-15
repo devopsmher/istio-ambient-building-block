@@ -1,0 +1,5 @@
+apiVersion: v2
+name: mesh-namespace
+description: A team namespace in Istio ambient mode with default-deny and identity-based allow rules.
+type: application
+version: 0.1.0

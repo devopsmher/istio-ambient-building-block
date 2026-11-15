@@ -1,0 +1,29 @@
+{{- if and .Values.enrolled .Values.networkPolicy.enabled }}
+# Admit only mesh traffic. In ambient mode:
+#   - connections from other workloads arrive as HBONE (mTLS tunnel) on port 15008;
+#   - kubelet health probes are rewritten by istio-cni to come from fixed link-local addresses,
+#     169.254.7.127 (IPv4) and fd16:9254:7127:1337:ffff:ffff:ffff:ffff (IPv6).
+# Who may connect is decided by AuthorizationPolicy, by identity; this policy only keeps
+# plain-text traffic from bypassing the mesh.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mesh-only
+  namespace: {{ .Values.namespace }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: 15008
+          protocol: TCP
+    - from:
+        - ipBlock:
+            cidr: 169.254.7.127/32
+        - ipBlock:
+            cidr: fd16:9254:7127:1337:ffff:ffff:ffff:ffff/128
+    {{- with .Values.networkPolicy.extraIngress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,23 @@
+# Root namespace of the mesh: a PeerAuthentication here applies to every namespace.
+rootNamespace: istio-system
+
+ingress:
+  enabled: true
+  namespace: istio-ingress
+  name: public
+  # Wildcard host of the shared listener; teams pick their own hostnames under it.
+  hostname: "*.example.com"
+  tlsSecretName: public-gateway-tls
+  # Annotations for the Service that Istio creates for the Gateway: an internet-facing AWS NLB.
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+  # Only namespaces with this label may attach HTTPRoutes to the gateway.
+  allowedRoutesLabel: mesh.example.io/ingress
+  # Wildcard certificate from cert-manager (for example Let's Encrypt with DNS-01).
+  certificate:
+    enabled: false
+    issuerRef:
+      kind: ClusterIssuer
+      name: letsencrypt-dns

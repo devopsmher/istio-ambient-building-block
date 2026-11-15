@@ -1,0 +1,50 @@
+# One Argo CD Application per team: every examples/teams/<team>/values.yaml in this repository
+# becomes the team's namespace, routes and egress allowlist. Onboarding a team is one pull request.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: mesh-onboarding
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/devopsmher/istio-ambient-building-block.git
+        revision: v0.1.0
+        files:
+          - path: examples/teams/*/values.yaml
+  template:
+    metadata:
+      name: "mesh-{{ .path.basename }}"
+    spec:
+      project: default
+      sources:
+        - repoURL: https://github.com/devopsmher/istio-ambient-building-block.git
+          targetRevision: v0.1.0
+          ref: teams
+        - repoURL: https://github.com/devopsmher/istio-ambient-building-block.git
+          targetRevision: v0.1.0
+          path: charts/mesh-namespace
+          helm:
+            valueFiles:
+              - "$teams/{{ .path.path }}/values.yaml"
+        - repoURL: https://github.com/devopsmher/istio-ambient-building-block.git
+          targetRevision: v0.1.0
+          path: charts/mesh-routes
+          helm:
+            valueFiles:
+              - "$teams/{{ .path.path }}/values.yaml"
+        - repoURL: https://github.com/devopsmher/istio-ambient-building-block.git
+          targetRevision: v0.1.0
+          path: charts/mesh-egress
+          helm:
+            valueFiles:
+              - "$teams/{{ .path.path }}/values.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ .path.basename }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true

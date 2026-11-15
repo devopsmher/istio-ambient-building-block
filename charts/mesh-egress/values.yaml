@@ -1,0 +1,20 @@
+# External hosts a team namespace talks to: APIs, managed databases, SaaS.
+# Each host becomes a ServiceEntry visible only inside the namespace, so it shows up in
+# telemetry and Kiali, and can get L7 policy through the namespace waypoint.
+
+# Team namespace.
+namespace: ""
+
+egress:
+  hosts: []
+  #  - name: payment-provider
+  #    host: api.payment-provider.example
+  #    port: 443
+  #    protocol: TLS
+  #  - name: orders-db
+  #    host: orders-db.example.internal
+  #    port: 5432
+  #    protocol: TCP
+
+  # Send egress through the namespace waypoint (needs waypoint.enabled in mesh-namespace).
+  useWaypoint: false

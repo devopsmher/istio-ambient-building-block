@@ -1,0 +1,67 @@
+{{- $values := .Values }}
+# Deny by default: an ALLOW policy without rules matches nothing, so every connection
+# to this namespace is rejected unless another policy below allows it.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: default-deny
+  namespace: {{ $values.namespace }}
+spec: {}
+{{- if $values.allowFrom }}
+---
+# Allowed callers, by SPIFFE identity or by namespace.
+# Without a waypoint, ztunnel enforces this policy at L4 on every node.
+# With a waypoint, the waypoint enforces it, because ztunnel then sees the waypoint as the caller.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-callers
+  namespace: {{ $values.namespace }}
+spec:
+  {{- if $values.waypoint.enabled }}
+  targetRefs:
+    - kind: Gateway
+      group: gateway.networking.k8s.io
+      name: waypoint
+  {{- end }}
+  action: ALLOW
+  rules:
+    {{- range $values.allowFrom }}
+    {{- $caller := . }}
+    - from:
+        - source:
+            {{- if $caller.serviceAccounts }}
+            principals:
+              {{- range $caller.serviceAccounts }}
+              - {{ printf "%s/ns/%s/sa/%s" $values.trustDomain $caller.namespace . | quote }}
+              {{- end }}
+            {{- else }}
+            namespaces:
+              - {{ $caller.namespace | quote }}
+            {{- end }}
+      {{- with $values.ports }}
+      to:
+        - operation:
+            ports:
+              {{- range . }}
+              - {{ . | quote }}
+              {{- end }}
+      {{- end }}
+    {{- end }}
+{{- end }}
+{{- if $values.waypoint.enabled }}
+---
+# With a waypoint, ztunnel only needs to admit the waypoint itself.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-waypoint
+  namespace: {{ $values.namespace }}
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - {{ printf "%s/ns/%s/sa/%s" $values.trustDomain $values.namespace $values.waypoint.serviceAccount | quote }}
+{{- end }}

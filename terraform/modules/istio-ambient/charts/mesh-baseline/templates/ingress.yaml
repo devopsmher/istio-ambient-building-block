@@ -1,0 +1,49 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.ingress.namespace }}
+---
+# Shared north-south entry point. Istio deploys the gateway pods and the load balancer Service
+# from this resource; teams attach HTTPRoutes from namespaces that carry the allowed-routes label.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.ingress.name }}
+  namespace: {{ .Values.ingress.namespace }}
+spec:
+  gatewayClassName: istio
+  infrastructure:
+    annotations:
+      {{- toYaml .Values.ingress.annotations | nindent 6 }}
+  listeners:
+    - name: https
+      hostname: {{ .Values.ingress.hostname | quote }}
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: {{ .Values.ingress.tlsSecretName }}
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              {{ .Values.ingress.allowedRoutesLabel }}: allowed
+{{- if .Values.ingress.certificate.enabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.ingress.name }}-gateway
+  namespace: {{ .Values.ingress.namespace }}
+spec:
+  secretName: {{ .Values.ingress.tlsSecretName }}
+  dnsNames:
+    - {{ .Values.ingress.hostname | quote }}
+  issuerRef:
+    kind: {{ .Values.ingress.certificate.issuerRef.kind }}
+    name: {{ .Values.ingress.certificate.issuerRef.name }}
+{{- end }}
+{{- end }}

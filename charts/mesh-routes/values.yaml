@@ -1,0 +1,19 @@
+# Public routes of a team, attached to the shared ingress Gateway.
+
+# Team namespace (the routes and backend services live here).
+namespace: ""
+
+gateway:
+  name: public
+  namespace: istio-ingress
+  sectionName: https
+
+# Routes. The ingress gateway must also be an allowed caller in mesh-namespace:
+#   allowFrom: [{namespace: istio-ingress, serviceAccounts: [public-istio]}]
+routes: []
+#  - name: payments-api
+#    hostnames: [api.payments.example.com]
+#    rules:
+#      - pathPrefix: /
+#        service: payments-api
+#        port: 8080

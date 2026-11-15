@@ -1,0 +1,5 @@
+apiVersion: v2
+name: mesh-egress
+description: Allowlist of external hosts for a team namespace, as Istio ServiceEntries.
+type: application
+version: 0.1.0

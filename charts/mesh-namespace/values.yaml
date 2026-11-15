@@ -1,0 +1,36 @@
+# A team namespace in Istio ambient mode. Teams set these values in one file (see examples/teams/).
+
+# Namespace to create and enrol in the mesh.
+namespace: ""
+
+# In the mesh or not. false is the rollback: the ambient label and the mesh-only NetworkPolicy
+# go away, traffic flows without the mesh, and no pod restarts.
+enrolled: true
+
+# SPIFFE trust domain of the mesh: the prefix of every workload identity.
+trustDomain: cluster.local
+
+# Who may call workloads in this namespace. Everything else is denied.
+#   namespace only        — any workload of that namespace
+#   with serviceAccounts  — only those identities
+allowFrom: []
+
+# Optional: allow traffic only to these ports.
+ports: []
+
+ingress:
+  # Lets HTTPRoutes in this namespace attach to the shared ingress Gateway.
+  allowed: false
+  label: mesh.example.io/ingress
+
+waypoint:
+  # L7 features (HTTP authorization, retries, header-based routing) need a waypoint proxy.
+  enabled: false
+  # Service account of the waypoint deployment that Istio creates; check with kubectl get sa.
+  serviceAccount: waypoint
+
+networkPolicy:
+  # NetworkPolicy that admits only mesh traffic: HBONE on port 15008 and kubelet probes.
+  enabled: true
+  # Extra ingress rules, for example metrics scraping by a Prometheus outside the mesh.
+  extraIngress: []
